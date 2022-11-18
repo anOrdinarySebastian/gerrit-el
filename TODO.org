@@ -1,0 +1,2 @@
+* TODO Make emacs fetch the current refspec
+* TODO Make emacs go to the corret line and insert comments
