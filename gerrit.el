@@ -4,6 +4,22 @@
 
 (message "Loading gerrit.el...")
 
+(defvar gerrit-getter--buffer-decorator "<gerrrrrrrrrrrrrrit>")
+
+(defface gerrit-getter--decorator-face
+  ;; Face stolen from the manual
+  ((((class color) (min-colors 88) (background light))
+          :background "darkseagreen2")
+         (((class color) (min-colors 88) (background dark))
+          :background "darkolivegreen")
+         (((class color) (min-colors 16) (background light))
+          :background "darkseagreen2")
+         (((class color) (min-colors 16) (background dark))
+          :background "darkolivegreen")
+         (((class color) (min-colors 8))
+          :background "green" :foreground "black")
+         (t :inverse-video t)))
+
 (defun get-gerrit-comments ()
   "Function for fetching gerrit comments from the latest log
 
@@ -63,24 +79,25 @@ Not yet used but should probably conatin these lines"
     (goto-char (point-max))
     (delete-region (+ (search-backward "}") 1) (point-max))
     (goto-char (point-min))
-    (let ((returned-json (json-parse-buffer :object-type 'alist)))
+    (let* ((returned-json (json-parse-buffer :object-type 'alist))
+           (gerrit_comments (alist-get 'comments returned-json)))
 
-      ;; loopable values              x                        x
-      ;;                             |                        |
-      (message (alist-get 'message (elt (alist-get 'comments (elt (alist-get 'patchSets returned-json) 0)) 0)))
+      (message (alist-get 'message (elt gerrit_comments 0)))
+      ;; (message (alist-get 'message (elt (alist-get 'comments (elt (alist-get 'patchSets returned-json) 0)) 0)))
       (message (alist-get 'project returned-json))
-      (let ((gerrit_comments . (alist-get 'comments returned-json)))
+      (seq-map #'(lambda (x) (alist-get 'number x)) a)
 
-        )
-      (dolist VAR (alist-get 'comments (elt (reverse (alist-get 'patchSets returned-json)) 0))
-
-        (car VAR) ;; <--- This body needs fixing. Find out what the value of msg really is!
-        (car VAR) ;; <--- This body needs fixing. Find out what the value of msg really is!
-        ;; (message "The number is %s" (alist-get 'message VAR)) ;; <--- This body needs fixing. Find out what the value of msg really is!
-        ;; (message "The number is %s" (alist-get 'message VAR)) ;; <--- This body needs fixing. Find out what the value of msg really is!
-        ))
     )
-  )
+    ))
+
+(defun gerrit-getter--insert-gerrit-comment (gerrit_comment_text gerrit_comment_line)
+  (goto-line gerrit_comment_line)
+  (insert gerrit-getter--buffer-decorator "\n")
+  (insert gerrit_comment_text)
+  (insert "\n" gerrit-getter--buffer-decorator)
+)
+
+
 
 (message "Done!")
 
