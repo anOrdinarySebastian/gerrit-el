@@ -3,7 +3,7 @@
 
 ** TODO Make emacs fetch the current refspec
 This should also be able to use a universal argument to give it as a string
-** TODO Make emacs go to the corret line and insert comments
+** DONE Make emacs go to the correct line and insert comments
 Maybe take inspiration from smerge or flyspell or someting like *org
 babel* Would be bonkers if the latter could be done as a render. Then
 the formatting would be retained while simultaneously showing comments
@@ -15,3 +15,7 @@ that do not insert into the code. Hopefully?
 This would reduce the need for local handling
 
 ** Add possibility to write comments in Emacs and upload
+
+** Handle file comments
+Currently I'm only going to look for actual file numbers, don't know
+how file comments will be handled
