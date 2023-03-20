@@ -23,13 +23,14 @@
 into to gerrit-getter decorator"
   )
 
-(defun get-gerrit-comments ()
+(defun get-gerrit-comments (specific_patchSet)
+  (interactive "nSpecific patchset: ")
   "Function for fetching gerrit comments from the latest log
 
 Main entry point"
   (interactive)
   (gerrit-getter--request-comments "I2be2a5c392830a1d3ddd84aa8ac592ed0c4101e1")
-  (gerrit-getter--parse-comment-positions)
+  (gerrit-getter--parse-comment-positions specific_patchSet)
   )
 
 (setq gerrit-getter-response-buffer-name "*gerrit log*")
@@ -65,13 +66,12 @@ Not yet used but should probably conatin these lines"
     (returned-json (json-parse-buffer :object-type 'alist))
     )
 
-(defun gerrit-getter--parse-comments ()
-  "Function for getting the comments from the parsed json"
+(defun gerrit-getter--parse-comments (gerrit_patchSet)
+  "Function for getting the comments from the patch set entry"
 
   )
 
-
-(defun gerrit-getter--parse-comment-positions ()
+(defun gerrit-getter--parse-comment-positions (&optional specific_patchSet_number)
   "Function for extracting the position of the comments"
 
   (with-current-buffer gerrit-getter-response-buffer-name
@@ -83,12 +83,15 @@ Not yet used but should probably conatin these lines"
     (delete-region (+ (search-backward "}") 1) (point-max))
     (goto-char (point-min))
     (let* ((returned-json (json-parse-buffer :object-type 'alist))
-           (gerrit_comments (alist-get 'comments returned-json)))
-
-      (print (alist-get 'message gerrit_comments))
+           (gerrit_patchSets (alist-get 'patchSets returned-json)))
+      (let ((patchSet_number (or specific_patchSet_number (length gerrit_patchSets))))
+        (seq-map #'(lambda (x) (message (format "The text:\n%s\nShould be placed on line: %d"
+                                       (alist-get 'message x)
+                                       (alist-get 'line x))))
+                     (alist-get 'comments (elt gerrit_patchSets (- patchSet_number 1))))
+        )
       (message (alist-get 'project returned-json)) ; Keeping this as a sanity check
-      (seq-map #'(lambda (x) (alist-get 'number x)) a)
-
+      ;; (goto-line (gerrit-getter--parse-comments ))
     )
     ))
 
@@ -115,3 +118,7 @@ Not yet used but should probably conatin these lines"
 
 ;; This function is used to apply the lambda function to all elements in the list. FINALLY!
 ;; (seq-map #'(lambda (x) (alist-get 'number x)) a)
+
+;; The following commands outputs the contents of the patch set
+;; (elt gerrit_patchSets (- patchSet_number 1))
+;; ((number . "10") (revision . "823f5c760404fcb5411b13e7d3a4b27b51638dc5") (parents . ["53079eef8f61e03356e23c29d5bb841684f9fc70"]) (ref . "refs/changes/92/72392/10") (uploader (name . "Anton Olsson") (email . "ano@hms.se") (username . "ano")) (createdOn . 1668593877) (author (name . "Anton Olsson") (email . "ano@hms.se") (username . "ano")) (isDraft . :false) (kind . "REWORK") (comments . [((file . "testfiles/scripts/test_latency.py") (line . 49) (reviewer (name . "Sebastian Nirvin") (email . "sebe@hms.se") (username . "sebe")) (message . "Maybe combine these in api helper?")) ((file . "testfiles/scripts/test_latency.py") (line . 49) (reviewer (name . "Anton Olsson") (email . "ano@hms.se") (username . "ano")) (message . "Yes, that's what I would like but I can't keep in adding changes to more and more files now. Once the \"needed sleep\" has been ironed out that would be optimal."))]) (sizeInsertions . 101) (sizeDeletions . -72))
